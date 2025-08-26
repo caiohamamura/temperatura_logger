@@ -61,7 +61,11 @@ async def log(endereco: str = Query(...), temperatura: float = Query(...)):
 
 @app.get("/dados")
 def dados():
-    return storage
+    return [
+        {"endereco": endereco, "temperatura": temp, "data": t.isoformat()}
+        for endereco, entries in storage.items()
+        for t, temp in entries
+    ]
 
 
 
