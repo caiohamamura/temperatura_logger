@@ -23,10 +23,10 @@ app.add_middleware(
 # In-memory storage: list of (endereco, temperatura, timestamp)
 storage: Dict[str, Deque] = defaultdict(list)
 
-enderecos = {
-    "28:3D:44:04:00:00:00:41": "Sensor baixo",
-    "28:2C:CF:03:00:00:00:10": "Sensor cima"
-}
+# enderecos = {
+#     "sensor_1": "Sensor baixo",
+#     "sensor_2": "Sensor cima"
+# }
 
 
 async def broadcast_snapshot(obj):
@@ -45,7 +45,7 @@ async def broadcast_snapshot(obj):
 async def log(endereco: str = Query(...), temperatura: float = Query(...)):
     """Receive and log endereco, temperatura, and timestamp."""
     now = datetime.now(timezone.utc)
-    endereco = enderecos[endereco]
+    # endereco = enderecos[endereco]
     storage[endereco].append((now, temperatura))
     cutoff = datetime.now(timezone.utc) - timedelta(minutes=10)
     if storage[endereco][0][0] < cutoff:
