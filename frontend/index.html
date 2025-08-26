@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Temperature Dashboard</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-locale-pt-br-latest.js"></script> 
+
+    <style>
+        #app {
+            max-width: 900px;
+            margin: auto;
+            padding: 20px;
+        }
+
+        #plot {
+            width: 100%;
+            height: 500px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <h1>Monitor de temperaturas</h1>
+        <div id="plot"></div>
+    </div>
+
+    <script>
+        const { createApp, ref, onMounted, reactive } = Vue;
+
+        createApp({
+            setup() {
+                const dataSeries = reactive({}); // { endereco: { x: [], y: [] } }
+                const userLocale = navigator.language || 'en-US';
+
+
+                function localDateToFakeUTC(d) {
+                    // Create a new Date object where the UTC time is the local time
+                    return new Date(d);
+                }
+
+                
+
+
+                function formatDateForHover(datetimeStr) {
+                    const dt = new Date(datetimeStr + "Z");
+                    return dt.toLocaleString(userLocale);
+                }
+
+               
+                // Initialize Plotly plot
+                function plotData() {
+                    Plotly.setPlotConfig({locale: 'pt'}); 
+                    const traces = Object.keys(dataSeries).map(endereco => ({
+                        x: dataSeries[endereco].x,
+                        y: dataSeries[endereco].y,
+                        mode: 'lines',
+                        name: endereco,
+                        hovertemplate: '%{y}°C<br>%{x}',
+                    }));
+
+
+                    Plotly.react('plot', traces, {
+                        title: 'Temperatura',
+                        xaxis: {
+                            title: 'Hora',
+                            type: 'date',
+                        },
+                        yaxis: { title: 'Temperature (°C)' },
+                    });
+                }
+
+                // Load initial data via HTTP
+                async function fetchInitialData() {
+                    try {
+                        const res = await fetch('http://127.0.0.1:8000/dados');
+                        const json = await res.json();
+
+                        
+                        json.forEach(sensor => {
+                            dataSeries[sensor.endereco] = {
+                                x: sensor.data.slice().map(localDateToFakeUTC),
+                                y: sensor.temperatura.slice()
+                            };
+                        });
+
+                        plotData();
+                    } catch (err) {
+                        console.error('Error fetching initial data:', err);
+                    }
+                }
+
+                // WebSocket to receive new data
+                function setupWebSocket() {
+                    const ws = new WebSocket('ws://127.0.0.1:8000/ws');
+
+                    ws.onmessage = (event) => {
+                        const msg = JSON.parse(event.data);
+                        console.log(msg);
+                        const endereco = msg.endereco;
+
+                        if (!dataSeries[endereco]) {
+                            dataSeries[endereco] = { x: [], y: [] };
+                        }
+
+                        // Optional: keep only last N points
+                        old_time = (new Date(dataSeries[endereco].x[0]));
+                        now_plus_10min = (new Date()).getTime() - 60000 * 10
+                        if (old_time < now_plus_10min) {
+                            dataSeries[endereco].x.shift();
+                            dataSeries[endereco].y.shift();
+                        }
+
+
+                        dataSeries[endereco].y.push(msg.temperatura);
+                        dataSeries[endereco].x = [...dataSeries[endereco].x, localDateToFakeUTC(msg.data)]; 
+
+
+
+                        plotData();
+                    };
+                }
+
+                onMounted(() => {
+                    Plotly.setPlotConfig({locale: 'pt-br'})
+                    fetchInitialData();
+                    setupWebSocket();
+                });
+
+                return { dataSeries };
+            }
+        }).mount('#app');
+    </script>
+</body>
+
+</html>
