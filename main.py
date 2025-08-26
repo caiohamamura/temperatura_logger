@@ -21,7 +21,7 @@ app.add_middleware(
 )
 
 # In-memory storage: list of (endereco, temperatura, timestamp)
-storage: Dict[str, Deque] = defaultdict(list)
+storage: Dict[str, Deque] = defaultdict(deque)
 
 # enderecos = {
 #     "sensor_1": "Sensor baixo",
