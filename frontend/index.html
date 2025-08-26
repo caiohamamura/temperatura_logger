@@ -76,7 +76,7 @@
                 // Load initial data via HTTP
                 async function fetchInitialData() {
                     try {
-                        const res = await fetch('http://127.0.0.1:8000/dados');
+                        const res = await fetch('https://temperatura-logger.onrender.com/dados');
                         const json = await res.json();
 
                         
@@ -95,7 +95,7 @@
 
                 // WebSocket to receive new data
                 function setupWebSocket() {
-                    const ws = new WebSocket('wss://https://temperatura-logger.onrender.com/ws');
+                    const ws = new WebSocket('wss://temperatura-logger.onrender.com/ws');
 
                     ws.onmessage = (event) => {
                         const msg = JSON.parse(event.data);
