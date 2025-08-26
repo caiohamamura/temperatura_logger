@@ -4,7 +4,7 @@ from fastapi.responses import HTMLResponse
 from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Deque
 from collections import defaultdict, deque
-
+from pydantic import BaseModel
 
 
 app = FastAPI()
@@ -57,7 +57,28 @@ async def log(endereco: str = Query(...), temperatura: float = Query(...)):
     })
     return {"status": "ok", "endereco": endereco, "temperatura": temperatura, "time": now.isoformat()}
 
+class Base(BaseModel):
+    endereco: str
+    temperatura: float
 
+@app.post('/log')
+async def log_post(data: List[Base]):
+    now = datetime.now(timezone.utc)
+
+    for ii in data:
+        endereco = ii.endereco
+        temperatura = ii.temperatura
+        storage[endereco].append((now, temperatura))
+        await broadcast_snapshot({
+            "endereco": endereco, 
+            "temperatura": temperatura, 
+            "data": now.isoformat()
+        })
+        
+    return {"status": "ok", "endereco": endereco, "temperatura": temperatura, "time": now.isoformat()}
+        
+    
+    
 
 @app.get("/dados")
 def dados():
