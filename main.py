@@ -82,6 +82,12 @@ def dados():
 
 
 
+@app.get('/')
+def index():
+    file = open('./frontend/index.html', 'r')
+    return HTMLResponse(content=file.read(), status_code=200)
+
+
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
@@ -96,10 +102,3 @@ async def websocket_endpoint(websocket: WebSocket):
     finally:
         if websocket in active_clients:
             active_clients.remove(websocket)
-            
-            
-@app.get('/')
-def index():
-    file = open('./frontend/index.html', 'r')
-    return HTMLResponse(content=file.read(), status_code=200)
-

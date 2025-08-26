@@ -95,7 +95,7 @@
 
                 // WebSocket to receive new data
                 function setupWebSocket() {
-                    const ws = new WebSocket(`wss://${window.location.host}:10000/ws`);
+                    const ws = new WebSocket(`wss://${window.location.host}/ws`);
 
                     ws.onmessage = (event) => {
                         const msg = JSON.parse(event.data);
