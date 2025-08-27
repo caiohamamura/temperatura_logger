@@ -6,7 +6,7 @@
     <title>Temperature Dashboard</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    <script src="https://cdn.plot.ly/plotly-locale-pt-br-latest.js"></script> 
+    <script src="https://cdn.plot.ly/plotly-locale-pt-br-latest.js"></script>
 
     <style>
         #app {
@@ -42,7 +42,7 @@
                     return new Date(d);
                 }
 
-                
+
 
 
                 function formatDateForHover(datetimeStr) {
@@ -50,10 +50,10 @@
                     return dt.toLocaleString(userLocale);
                 }
 
-               
+
                 // Initialize Plotly plot
                 function plotData() {
-                    Plotly.setPlotConfig({locale: 'pt'}); 
+                    Plotly.setPlotConfig({ locale: 'pt' });
                     const traces = Object.keys(dataSeries).map(endereco => ({
                         x: dataSeries[endereco].x,
                         y: dataSeries[endereco].y,
@@ -65,6 +65,7 @@
 
                     Plotly.react('plot', traces, {
                         title: 'Temperatura',
+                        uirevision:'true',
                         xaxis: {
                             title: 'Hora',
                             type: 'date',
@@ -79,7 +80,7 @@
                         const res = await fetch(`https://${window.location.host}/dados`);
                         const json = await res.json();
 
-                        
+
                         json.forEach(sensor => {
                             dataSeries[sensor.endereco] = {
                                 x: sensor.data.slice().map(localDateToFakeUTC),
@@ -107,16 +108,21 @@
                         }
 
                         // Optional: keep only last N points
-                        
-                        const qdeTemperaturas = dataSeries[endereco].y.length;
-                        const penultimaTemperatura = dataSeries[endereco].y[qdeTemperaturas - 2];
-                        const ultimaTemperatura = dataSeries[endereco].y[qdeTemperaturas - 1];
-                        if (msg.temperatura == penultimaTemperatura && msg.temperatura == ultimaTemperatura) {
-                            dataSeries[endereco].x = [...dataSeries[endereco].x.slice(0, -1), localDateToFakeUTC(msg.data)]
 
+                        if (dataSeries[endereco].length > 2) {
+                            const qdeTemperaturas = dataSeries[endereco].y.length;
+                            const penultimaTemperatura = dataSeries[endereco].y[qdeTemperaturas - 2];
+                            const ultimaTemperatura = dataSeries[endereco].y[qdeTemperaturas - 1];
+                            if (msg.temperatura == penultimaTemperatura && msg.temperatura == ultimaTemperatura) {
+                                dataSeries[endereco].x = [...dataSeries[endereco].x.slice(0, -1), localDateToFakeUTC(msg.data)]
+
+                            } else {
+                                dataSeries[endereco].y.push(msg.temperatura);
+                                dataSeries[endereco].x = [...dataSeries[endereco].x, localDateToFakeUTC(msg.data)];
+                            }
                         } else {
                             dataSeries[endereco].y.push(msg.temperatura);
-                            dataSeries[endereco].x = [...dataSeries[endereco].x, localDateToFakeUTC(msg.data)]; 
+                            dataSeries[endereco].x = [...dataSeries[endereco].x, localDateToFakeUTC(msg.data)];
                         }
 
                         if (dataSeries[endereco].length > 1000) {
@@ -133,7 +139,7 @@
                 }
 
                 onMounted(() => {
-                    Plotly.setPlotConfig({locale: 'pt-br'})
+                    Plotly.setPlotConfig({ locale: 'pt-br' })
                     fetchInitialData();
                     setupWebSocket();
                 });

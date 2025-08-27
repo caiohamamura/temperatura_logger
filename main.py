@@ -69,10 +69,13 @@ async def log_post(data: List[Base]):
     for ii in data:
         endereco = ii.endereco
         temperatura = ii.temperatura
-        penultima_temp = storage[endereco][-2][1]
-        ultima_temp = storage[endereco][-1][1]
-        if temperatura == penultima_temp and temperatura == ultima_temp:
-            storage[endereco][-1][0] = now
+        if len(storage[endereco]) > 2:
+            penultima_temp = storage[endereco][-2][1]
+            ultima_temp = storage[endereco][-1][1]
+            if temperatura == penultima_temp and temperatura == ultima_temp:
+                storage[endereco][-1][0] = now
+            else:
+                storage[endereco].append((now, temperatura))
         else:
             storage[endereco].append((now, temperatura))
         if len(storage[endereco]) > 1000:
