@@ -126,9 +126,8 @@
                         }
 
                         if (dataSeries[endereco].length > 1000) {
-                            let aleatorio = Math.floor(Math.random() * 1000);
-                            dataSeries[endereco].x.splice(aleatorio, 1);
-                            dataSeries[endereco].y.splice(aleatorio, 1);
+                            dataSeries[endereco].x.splice(0, 1);
+                            dataSeries[endereco].y.splice(0, 1);
                         }
 
 

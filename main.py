@@ -79,8 +79,7 @@ async def log_post(data: List[Base]):
         else:
             storage[endereco].append((now, temperatura))
         if len(storage[endereco]) > 1000:
-            aleatorio = random.randint(0, 999)
-            del storage[endereco][aleatorio]
+            storage[endereco].popleft()
         await broadcast_snapshot({
             "endereco": endereco, 
             "temperatura": temperatura, 
