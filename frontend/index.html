@@ -100,7 +100,7 @@
 
                     ws.onmessage = (event) => {
                         const msg = JSON.parse(event.data);
-                        console.log(msg);
+                        // console.log(msg);
                         const endereco = msg.endereco;
 
                         if (!dataSeries[endereco]) {
@@ -109,7 +109,7 @@
 
                         // Optional: keep only last N points
 
-                        if (dataSeries[endereco].length > 2) {
+                        if (dataSeries[endereco].x.length > 2) {
                             const qdeTemperaturas = dataSeries[endereco].y.length;
                             const penultimaTemperatura = dataSeries[endereco].y[qdeTemperaturas - 2];
                             const ultimaTemperatura = dataSeries[endereco].y[qdeTemperaturas - 1];
