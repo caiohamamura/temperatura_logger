@@ -5,6 +5,7 @@ from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Deque
 from collections import defaultdict, deque
 from pydantic import BaseModel
+import random
 
 
 app = FastAPI()
@@ -47,9 +48,9 @@ async def log(endereco: str = Query(...), temperatura: float = Query(...)):
     now = datetime.now(timezone.utc)
     # endereco = enderecos[endereco]
     storage[endereco].append((now, temperatura))
-    cutoff = datetime.now(timezone.utc) - timedelta(minutes=10)
-    if storage[endereco][0][0] < cutoff:
-        storage[endereco].popleft()
+    if len(storage[endereco]) > 1000:
+        aleatorio = random.randint(0, 999)
+        del storage[endereco][aleatorio]
     
     
     await broadcast_snapshot({
@@ -69,6 +70,9 @@ async def log_post(data: List[Base]):
         endereco = ii.endereco
         temperatura = ii.temperatura
         storage[endereco].append((now, temperatura))
+        if len(storage[endereco]) > 1000:
+            aleatorio = random.randint(0, 999)
+            del storage[endereco][aleatorio]
         await broadcast_snapshot({
             "endereco": endereco, 
             "temperatura": temperatura, 
