@@ -108,15 +108,23 @@
 
                         // Optional: keep only last N points
                         
+                        const qdeTemperaturas = dataSeries[endereco].y.length;
+                        const penultimaTemperatura = dataSeries[endereco].y[qdeTemperaturas - 2];
+                        const ultimaTemperatura = dataSeries[endereco].y[qdeTemperaturas - 1];
+                        if (msg.temperatura == penultimaTemperatura && msg.temperatura == ultimaTemperatura) {
+                            dataSeries[endereco].x = [...dataSeries[endereco].x.slice(0, -1), localDateToFakeUTC(msg.data)]
+
+                        } else {
+                            dataSeries[endereco].y.push(msg.temperatura);
+                            dataSeries[endereco].x = [...dataSeries[endereco].x, localDateToFakeUTC(msg.data)]; 
+                        }
+
                         if (dataSeries[endereco].length > 1000) {
                             let aleatorio = Math.floor(Math.random() * 1000);
                             dataSeries[endereco].x.splice(aleatorio, 1);
                             dataSeries[endereco].y.splice(aleatorio, 1);
                         }
 
-
-                        dataSeries[endereco].y.push(msg.temperatura);
-                        dataSeries[endereco].x = [...dataSeries[endereco].x, localDateToFakeUTC(msg.data)]; 
 
 
 
