@@ -107,11 +107,11 @@
                         }
 
                         // Optional: keep only last N points
-                        old_time = (new Date(dataSeries[endereco].x[0]));
-                        now_plus_10min = (new Date()).getTime() - 60000 * 10
-                        if (old_time < now_plus_10min) {
-                            dataSeries[endereco].x.shift();
-                            dataSeries[endereco].y.shift();
+                        
+                        if (dataSeries[endereco].length > 1000) {
+                            let aleatorio = Math.floor(Math.random() * 1000);
+                            dataSeries[endereco].x.splice(aleatorio, 1);
+                            dataSeries[endereco].y.splice(aleatorio, 1);
                         }
 
 
