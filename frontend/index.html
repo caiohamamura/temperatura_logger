@@ -4,9 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <title>Temperature Dashboard</title>
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://cdn.plot.ly/plotly-3.1.0.min.js"></script>
     <script src="https://cdn.plot.ly/plotly-locale-pt-br-latest.js"></script>
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 
     <style>
         #app {
@@ -65,7 +66,7 @@
 
                     Plotly.react('plot', traces, {
                         title: 'Temperatura',
-                        uirevision:'true',
+                        uirevision: 'true',
                         xaxis: {
                             title: 'Hora',
                             type: 'date',
@@ -96,55 +97,73 @@
 
                 // WebSocket to receive new data
                 function setupWebSocket() {
-                    const ws = new WebSocket(`wss://${window.location.host}/ws`);
+                    const host = '74101a5cd6e04a08a2d360bb58565bea.s1.eu.hivemq.cloud';
+                    const clientId = `client_${Math.random().toString(16).substr(2, 8)}`;
+                    const username = '{{hivemq_user}}';
+                    const password = '{{hivemq_pass}}';
 
-                    ws.onmessage = (event) => {
-                        const msg = JSON.parse(event.data);
-                        // console.log(msg);
-                        const endereco = msg.endereco;
+                    const cliente = mqtt.connect(`wss://${host}:8884/mqtt`, {
+                        clientId: clientId,
+                        username: username,
+                        password: password,
+                    });
 
-                        if (!dataSeries[endereco]) {
-                            dataSeries[endereco] = { x: [], y: [] };
-                        }
+                    // Handle connection events
+                    cliente.on('connect', () => {
+                        cliente.subscribe('/chbr_topic'); // Replace with your topic
+                    });
 
-                        // Optional: keep only last N points
 
-                        if (dataSeries[endereco].x.length > 2) {
-                            const qdeTemperaturas = dataSeries[endereco].y.length;
-                            const penultimaTemperatura = dataSeries[endereco].y[qdeTemperaturas - 2];
-                            const ultimaTemperatura = dataSeries[endereco].y[qdeTemperaturas - 1];
-                            if (msg.temperatura == penultimaTemperatura && msg.temperatura == ultimaTemperatura) {
-                                dataSeries[endereco].x = [...dataSeries[endereco].x.slice(0, -1), localDateToFakeUTC(msg.data)]
 
-                            } else {
-                                dataSeries[endereco].y.push(msg.temperatura);
-                                dataSeries[endereco].x = [...dataSeries[endereco].x, localDateToFakeUTC(msg.data)];
+                    cliente.on('message', (topic, message) => {
+                        const msgs = JSON.parse(message.toString());
+
+                        for (endereco of Object.keys(msgs)) {
+                            const temperatura = msgs[endereco];
+
+                            if (!dataSeries[endereco]) {
+                                dataSeries[endereco] = { x: [], y: [] };
                             }
-                        } else {
-                            dataSeries[endereco].y.push(msg.temperatura);
-                            dataSeries[endereco].x = [...dataSeries[endereco].x, localDateToFakeUTC(msg.data)];
+
+                            if (dataSeries[endereco].x.length > 2) {
+                                const qdeTemperaturas = dataSeries[endereco].y.length;
+                                const penultimaTemperatura = dataSeries[endereco].y[qdeTemperaturas - 2];
+                                const ultimaTemperatura = dataSeries[endereco].y[qdeTemperaturas - 1];
+                                if (temperatura == penultimaTemperatura && temperatura == ultimaTemperatura) {
+                                    dataSeries[endereco].x = [...dataSeries[endereco].x.slice(0, -1), new Date()]
+
+                                } else {
+                                    dataSeries[endereco].y.push(temperatura);
+                                    dataSeries[endereco].x = [...dataSeries[endereco].x, new Date()];
+                                }
+                            } else {
+                                dataSeries[endereco].y.push(temperatura);
+                                dataSeries[endereco].x = [...dataSeries[endereco].x, new Date()];
+                            }
+
+                            if (dataSeries[endereco].length > 1000) {
+                                dataSeries[endereco].x.splice(0, 1);
+                                dataSeries[endereco].y.splice(0, 1);
+                            }
                         }
-
-                        if (dataSeries[endereco].length > 1000) {
-                            dataSeries[endereco].x.splice(0, 1);
-                            dataSeries[endereco].y.splice(0, 1);
-                        }
-
-
-
-
                         plotData();
-                    };
+                    })
+
+
+
+
                 }
 
+
                 onMounted(() => {
-                    Plotly.setPlotConfig({ locale: 'pt-br' })
+                    Plotly.setPlotConfig({ locale: 'pt-br' });
                     fetchInitialData();
                     setupWebSocket();
                 });
 
                 return { dataSeries };
             }
+
         }).mount('#app');
     </script>
 </body>
